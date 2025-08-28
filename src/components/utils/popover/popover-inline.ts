@@ -1,10 +1,10 @@
-import { isMobileScreen } from '../../utils';
-import type { PopoverItem } from './components/popover-item';
-import { PopoverItemDefault, PopoverItemType } from './components/popover-item';
-import { PopoverItemHtml } from './components/popover-item/popover-item-html/popover-item-html';
-import { PopoverDesktop } from './popover-desktop';
-import { CSSVariables, css } from './popover.const';
-import type { PopoverParams } from '@/types/utils/popover/popover';
+import { isMobileScreen } from "../../utils";
+import type { PopoverItem } from "./components/popover-item";
+import { PopoverItemDefault, PopoverItemType } from "./components/popover-item";
+import { PopoverItemHtml } from "./components/popover-item/popover-item-html/popover-item-html";
+import { PopoverDesktop } from "./popover-desktop";
+import { CSSVariables, css } from "./popover.const";
+import type { PopoverParams } from "@/types/utils/popover/popover";
 
 /**
  * Horizontal popover that is displayed inline with the content
@@ -30,17 +30,17 @@ export class PopoverInline extends PopoverDesktop {
            *
            * @todo figure out better way to solve the issue
            */
-          wrapperTag: 'button',
+          wrapperTag: "button",
           hint: {
-            position: 'top',
-            alignment: 'center',
+            position: "top",
+            alignment: "center",
             enabled: isHintEnabled,
           },
         },
         [PopoverItemType.Html]: {
           hint: {
-            position: 'top',
-            alignment: 'center',
+            position: "top",
+            alignment: "center",
             enabled: isHintEnabled,
           },
         },
@@ -52,16 +52,18 @@ export class PopoverInline extends PopoverDesktop {
      * This is needed to display link url text (which is displayed as a nested popover content)
      * once you select <a> tag content in text
      */
-    this.items
-      .forEach((item) => {
-        if (!(item instanceof PopoverItemDefault) && !(item instanceof PopoverItemHtml)) {
-          return;
-        }
+    this.items.forEach((item) => {
+      if (
+        !(item instanceof PopoverItemDefault) &&
+        !(item instanceof PopoverItemHtml)
+      ) {
+        return;
+      }
 
-        if (item.hasChildren && item.isChildrenOpen) {
-          this.showNestedItems(item);
-        }
-      });
+      if (item.hasChildren && item.isChildrenOpen) {
+        this.showNestedItems(item);
+      }
+    });
   }
 
   /**
@@ -85,7 +87,7 @@ export class PopoverInline extends PopoverDesktop {
     if (this.nestingLevel === 0) {
       this.nodes.popover.style.setProperty(
         CSSVariables.InlinePopoverWidth,
-        this.size.width + 'px'
+        this.size.width + "px"
       );
     }
     super.show();
@@ -116,7 +118,7 @@ export class PopoverInline extends PopoverDesktop {
 
     nestedPopoverEl.style.setProperty(
       CSSVariables.TriggerItemLeft,
-      totalLeftOffset + 'px'
+      totalLeftOffset + "px"
     );
   }
 
@@ -126,7 +128,9 @@ export class PopoverInline extends PopoverDesktop {
    *
    * @param item – item to toggle nested popover for
    */
-  protected override showNestedItems(item: PopoverItemDefault | PopoverItemHtml): void {
+  protected override showNestedItems(
+    item: PopoverItemDefault | PopoverItemHtml
+  ): void {
     if (this.nestedPopoverTriggerItem === item) {
       this.destroyNestedPopoverIfExists();
 
@@ -152,7 +156,9 @@ export class PopoverInline extends PopoverDesktop {
      * We need to add class with nesting level, shich will help position nested popover.
      * Currently only '.ce-popover--nested-level-1' class is used
      */
-    nestedPopoverEl.classList.add(css.getPopoverNestedClass(nestedPopover.nestingLevel));
+    nestedPopoverEl.classList.add(
+      css.getPopoverNestedClass(nestedPopover.nestingLevel)
+    );
 
     return nestedPopover;
   }
@@ -164,16 +170,15 @@ export class PopoverInline extends PopoverDesktop {
    * @param item - clicked item
    */
   protected override handleItemClick(item: PopoverItem): void {
+    // Before: when switching to another inline tool, we re-triggered
+    // the previous tool’s handleClick(), which in the case of Link
+    // would unwrap (<a> → unlink()).
+    //
+    // After: we only deactivate the UI state and close the nested
+    // popover without toggling the previous tool. This prevents
+    // the Link tool from destroying the <a> element when combined
+    // with other inline tools.
     if (item !== this.nestedPopoverTriggerItem) {
-      /**
-       * In case tool had special handling for toggling button (like link tool which modifies selection)
-       * we need to call handleClick on nested popover trigger item
-       */
-      this.nestedPopoverTriggerItem?.handleClick();
-
-      /**
-       * Then close the nested popover
-       */
       super.destroyNestedPopoverIfExists();
     }
 
